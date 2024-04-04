@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useContainer } from "./container";
 import { Widget } from "./widget";
-import { uniq, uniqueId } from "lodash";
 
 
 
@@ -38,11 +37,11 @@ export const MenuItems = ({ name, title, icon = `<i class="fa-regular fa-face-sm
         setOpenMenu(false);
         setChanged(true);
         addContent(<Widget
-            id={uniqueId('widget-')}
+            id={(new Date().getTime()).toString(36)}
             name={name}
             title={title}
             description={description}
-            option={Object.assign({ width: 200, height: 100 }, option|| {})}
+            option={Object.assign({ width: 200, height: 100 }, option || {})}
             focus={true} />);
     }
 
