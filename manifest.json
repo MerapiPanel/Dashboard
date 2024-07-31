@@ -2,5 +2,6 @@
   "name": "Dashboard",
   "description": "Dashboard module for panel admin",
   "version": "1.0.1",
-  "author": "Il4mb"
+  "author": "Il4mb",
+  "icon": "./icon.svg"
 }
