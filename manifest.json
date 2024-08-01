@@ -1,6 +1,10 @@
 {
   "name": "Dashboard",
   "description": "Dashboard module for panel admin",
+  "github": {
+    "user": "MerapiPanel",
+    "repo": "Dashboard"
+  },
   "version": "1.0.1",
   "author": "Il4mb",
   "icon": "./icon.svg"
