@@ -3,29 +3,17 @@ import { useContainer } from "./container";
 import { WidgetAdd } from "./widget-add";
 import { Widget } from "./widget";
 
-
-
 const SaveButton = () => {
 
     const { contents, setChanged } = useContainer();
-    const { endpoint_save, endpoint_load } = window.widgetPayload;
 
     const saveHandle = () => {
 
-        if (!endpoint_save) {
-            return console.error('endpoint_save not found');
-        }
-        if (Array.isArray(contents)) {
-            const contentJson = JSON.stringify(contents.map((item) => item.props));
-            __.http.post(endpoint_save, { data: contentJson })
-                .then((data) => {
-                    setChanged(false);
-                    __.toast("Widget Saved", 5, 'text-success');
-                })
-                .catch((error) => {
-                    __.toast(error.message || "Something went wrong", 5, 'text-danger');
-                });
-        }
+        const contentJson = JSON.stringify(contents.map((item) => item.props));
+        __.Widget.fire("save", contentJson)
+            .then(() => {
+                setChanged(false);
+            });
     }
 
     return (
@@ -34,7 +22,6 @@ const SaveButton = () => {
         </div>
     )
 }
-
 
 export const WidgetContent = ({ children }) => {
 
@@ -58,9 +45,6 @@ export const WidgetContent = ({ children }) => {
                 setContents(tempContents);
             })
     }, [])
-
-
-
 
     return (
         <div ref={ref} className="widget-content">

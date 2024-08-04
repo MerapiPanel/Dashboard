@@ -2,9 +2,10 @@
 
 namespace MerapiPanel\Module\Dashboard;
 
+use Exception;
 use MerapiPanel\Box;
 use MerapiPanel\Box\Module\__Fragment;
-use MerapiPanel\Core\Abstract\Module;
+use MerapiPanel\Utility\Http\Request;
 use MerapiPanel\Utility\Http\Response;
 use MerapiPanel\Views\View;
 use Symfony\Component\Filesystem\Path;
@@ -43,14 +44,17 @@ class Widget extends __Fragment
     {
 
         try {
+
+            if (Request::getInstance()->http("sec-fetch-dest") != "iframe") throw new Exception("Can't navigate directly", 410);
+
             list($widget_module, $widget_name) = explode("/", $name);
 
             $render = "render.php";
             $css = "index.css";
             $js = "index.js";
-            $render_fragment = Box::module(ucfirst(preg_replace("/^@/", "", $widget_module . "/")))->Widgets->$widget_name->$render;
-            $css_fragment = Box::module(ucfirst(preg_replace("/^@/", "", $widget_module . "/")))->Widgets->$widget_name->dist->$css;
-            $js_fragment = Box::module(ucfirst(preg_replace("/^@/", "", $widget_module . "/")))->Widgets->$widget_name->dist->$js;
+            $render_fragment = Box::module(ucfirst(preg_replace("/^@/", "", $widget_module)))->Widgets->$widget_name->$render;
+            $css_fragment = Box::module(ucfirst(preg_replace("/^@/", "", $widget_module)))->Widgets->$widget_name->dist->$css;
+            $js_fragment = Box::module(ucfirst(preg_replace("/^@/", "", $widget_module)))->Widgets->$widget_name->dist->$js;
 
             ob_start();
             require_once $render_fragment->path;
@@ -97,13 +101,17 @@ class Widget extends __Fragment
                 <head>
                     <meta charset="UTF-8"><title>Widget | $name</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="{{ 'dist/main.css' | assets | url }}" type="text/css"><style>body, html {height: 100vh;display: flex;align-items: center;justify-content: center;}</style>
                 </head>
-                <body>
-                    <div class="alert alert-danger" role="alert">failed to render widget: $name</div>
+                <body style="display: flex; flex-direction: column;">
+                    <div>
+                        <div style="font-size: 14px;">failed to render <b>$name</b></div>
+                        <p>{$e->getMessage()}</p>
+                    </div>
+                    
                 </body>
             </html>
             HTML;
                 $content = $twig->createTemplate($html)->render([]);
-                return new Response($content, 200, ["Content-Type" => "text/html"]);
+                return new Response($content, $e->getCode() ?? 500, ["Content-Type" => "text/html"]);
             }
             return [
                 "code" => 400,
@@ -146,7 +154,7 @@ class Widget extends __Fragment
     {
 
         if (!$this->module->getRoles()->isAllowed(0)) {
-            throw new \Exception('Permission denied');
+            throw new Exception('Permission denied');
         }
 
         $widgets = [];
@@ -167,14 +175,17 @@ class Widget extends __Fragment
     {
 
         if (!$this->module->getRoles()->isAllowed(0)) {
-            throw new \Exception('Permission denied');
+            throw new Exception('Permission denied');
         }
 
         if (!$data) {
-            throw new \Exception('Invalid data');
+            throw new Exception('Invalid data');
         }
 
-        $file = __DIR__ . "/widget.json";
+        $file = __DIR__ . "/data/widget.json";
+        if (!file_exists(dirname($file))) {
+            mkdir(dirname($file));
+        }
         file_put_contents($file, is_string($data) ? $data : json_encode($data));
 
         return is_string($data) ? json_decode($data, true) : $data;
@@ -184,7 +195,7 @@ class Widget extends __Fragment
     public function fetch()
     {
 
-        $file = __DIR__ . "/widget.json";
+        $file = __DIR__ . "/data/widget.json";
         if (!file_exists($file)) {
             file_put_contents($file, json_encode([]));
         }

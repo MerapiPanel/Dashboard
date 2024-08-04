@@ -10,6 +10,20 @@
         endpoint_fetch: "{{ '/api/Dashboard/Widget/fetch' | access_path | url }}",
         endpoint_load: "{{ '/widget/load' | access_path | url }}"
     }
+    function handleSave(e, data) {
+        return new Promise((acc, rej) => {
+            __.http.post("{{'/api/Dashboard/Widget/save'|access_path|url}}", { data: data, csrf_token: "{{csrf_token()}}" })
+                .then((data) => {
+                    __.toast("Widget Saved", 5, 'text-success');
+                    acc("Ok");
+                })
+                .catch((error) => {
+                    __.toast(error.message || "Something went wrong", 5, 'text-danger');
+                    rej();
+                });
+        });
+    }
+    __.Widget.on("save", handleSave);
 </script>
 {% endblock %}
 
